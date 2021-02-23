@@ -18,19 +18,19 @@ bookmarksRouter
             logger.error(`Title is required`);
             return res
                 .status(400)
-                .send('Invalid data');
+                .send('Title is required');
         }
         if(!url){
             logger.error(`URL is required`);
             return res
                 .status(400)
-                .send('Invalid data');
+                .send('URL is required');
         }
         if(!rating){
             logger.error(`Rating is required`);
             return res
                 .status(400)
-                .send('Invalid data');
+                .send('Rating is required');
         }
         if(!Number.isInteger(rating) || rating <0 || rating >5){
             logger.error(`The rating ${rating} is invalid`);
