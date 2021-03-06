@@ -3,14 +3,28 @@ const store = require('../store')
 const { v4: uuid } = require('uuid')
 const logger = require('../logger')
 const {isWebUri} = require('valid-url')
+const BookmarksService = require('./BookmarksService')
 
 const bookmarksRouter = express.Router()
 const bodyParser = express.json()
 
+const serializeBookmark = bookmark => ({
+    id: bookmark.id,
+    title: bookmark.title,
+    url: bookmark.url,
+    description: bookmark.description,
+    rating: Number(bookmark.rating),
+  })
+
 bookmarksRouter
     .route('/bookmarks')
-    .get((req,res) => {
-        res.json(store.bookmarks)
+    .get((req,res,next) => {
+        const knexInstance = req.app.get('db')
+        BookmarksService.getAllBookmarks(knexInstance)
+            .then(bookmarks => {
+                res.json(bookmarks.map(serializeBookmark))
+            })
+            .catch(next)
     })
     .post(bodyParser, (req,res) => {
         const { title, url, description, rating } = req.body
@@ -61,19 +75,21 @@ bookmarksRouter
     })
 
     bookmarksRouter
-        .route('/bookmarks/:id')
-        .get((req,res) => {
-            const {id} = req.params
-            const bookmark = store.bookmarks.find(bookmark => bookmark.id === id)
-
-            if(!bookmark){
-                logger.error(`Bookmark with id ${id} is not found`)
-                return res  
-                    .status(404)
-                    .send('Bookmark Not Found')
-            }
-
-            res.json(bookmark);
+        .route('/bookmarks/:bookmark_id')
+        .get((req,res,next) => {
+            const { bookmark_id } = req.params
+            const knexInstance = req.app.get('db')
+            BookmarksService.getById(knexInstance, bookmark_id)
+            .then(bookmark => {
+                if (!bookmark) {
+                  logger.error(`Bookmark with id ${bookmark_id} not found.`)
+                  return res.status(404).json({
+                    error: { message: `Bookmark Not Found` }
+                  })
+                }
+                res.json(serializeBookmark(bookmark))
+              })
+              .catch(next)
         })
         .delete((req,res) => {
             const { id } = req.params
