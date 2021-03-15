@@ -26,7 +26,7 @@ app.use(bookmarksRouter)
   
 
 app.get('/', (req, res) => {
-    res.send('Hello, world!')
+    res.send('OK')
 })
 
 app.use(function errorHandler(error, req, res, next) {
